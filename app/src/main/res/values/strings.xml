@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">RoomData</string>
+    <string name="fbt_add">add</string>
+    <string name="hint_Search">Search...</string>
+    <string name="title">Title</string>
+    <string name="notes_here">Notes here</string>
+    <string name="date">date</string>
+    <string name="sorted_by">Sorted by</string>
+</resources>
