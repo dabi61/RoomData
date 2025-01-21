@@ -11,5 +11,5 @@ abstract class NoteDatabase : RoomDatabase() {
         const val DATABASE_NAME = "note_db"
     }
     abstract fun getNodeDao(): NoteDao
-
+    // sửa
 }

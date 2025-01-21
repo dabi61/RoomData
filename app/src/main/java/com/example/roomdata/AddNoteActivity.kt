@@ -37,9 +37,11 @@ class AddNoteActivity : AppCompatActivity() {
         }
         window.statusBarColor = ContextCompat.getColor(this, R.color.float_button)
 
-
+        // Tạo lớp Constants
+        // Nên truyền dữ liệu note quay lại
         val type = intent.getStringExtra("type")
-        binding.ivBack.setOnClickListener(){
+        binding.ivBack.setOnClickListener() {
+            onBackPressedDispatcher.onBackPressed()
             finish()
         }
         val db = Room.databaseBuilder(
@@ -47,7 +49,7 @@ class AddNoteActivity : AppCompatActivity() {
             NoteDatabase::class.java, "note_db"
         ).build()
         noteDao = db.getNodeDao()
-        binding.ivDone.setOnClickListener(){
+        binding.ivDone.setOnClickListener() {
             if (type != null) {
                 putData(type)
             }
@@ -71,17 +73,26 @@ class AddNoteActivity : AppCompatActivity() {
             val title: String = binding.etTitle.text.toString()
             val content: String = binding.etContent.text.toString()
             coroutineScope.launch {
-                val note = Note( title = title, content = content, createTime =  date.time, editTime = date.time)
+                val note = Note(
+                    title = title,
+                    content = content,
+                    createTime = date.time,
+                    editTime = date.time
+                )
                 noteDao.insertNote(note)
             }
             val createIntent = Intent()
             setResult(RESULT_OK, createIntent)
             finish()
-        }
-        else if (type == "edit") {
+        } else if (type == "edit") {
             val id = intent.getIntExtra("id", 0)
             coroutineScope.launch {
-                noteDao.updateNote(id, binding.etTitle.text.toString(), binding.etContent.text.toString(), date.time)
+                noteDao.updateNote(
+                    id,
+                    binding.etTitle.text.toString(),
+                    binding.etContent.text.toString(),
+                    date.time
+                )
             }
             val editIntent = Intent()
             editIntent.putExtra("id", id)

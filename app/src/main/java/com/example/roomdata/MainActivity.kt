@@ -20,6 +20,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.room.Room
+import com.example.roomdata.database.FilterType
 import com.example.roomdata.database.NoteDao
 import com.example.roomdata.database.NoteDatabase
 import com.example.roomdata.databinding.ActivityMainBinding
@@ -54,7 +55,7 @@ class MainActivity : AppCompatActivity(), OnNoteClickListener {
         setContentView(binding.root)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top , systemBars.right,0)
+            v.setPadding(systemBars.left, systemBars.top , systemBars.right, systemBars.bottom)
             insets
         }
         window.statusBarColor = ContextCompat.getColor(this, R.color.float_button)
@@ -88,7 +89,7 @@ class MainActivity : AppCompatActivity(), OnNoteClickListener {
                 }
             }
         }
-        binding.fbtAdd.setOnClickListener(){
+        binding.fbtAdd.setOnClickListener{
             val intent = Intent(this, AddNoteActivity::class.java)
             intent.putExtra("type", "add")
             createForResult.launch(intent)
@@ -126,8 +127,11 @@ class MainActivity : AppCompatActivity(), OnNoteClickListener {
             showFilter(id.toInt())
         }
 
+        FilterType.TYPE_NEW_FIRST.name
+
     }
     private fun showFilterDialog() {
+        // Sửa filter ko theo id, enum
         val sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE)
         val editor = sharedPreferences.edit()
         val dialogFilter = LayoutInflater.from(this).inflate(R.layout.dialog_filter, null)
@@ -166,7 +170,7 @@ class MainActivity : AppCompatActivity(), OnNoteClickListener {
             val notes = noteDao.getAllNote()
             withContext(Dispatchers.Main)
             {
-                when(selectedId){
+                when(selectedId) {
                     R.id.r1 -> {
                         notes.sortByDescending {it.editTime }
                         noteAdapter.filterNote(notes)
@@ -247,7 +251,7 @@ class MainActivity : AppCompatActivity(), OnNoteClickListener {
     override fun onDeleteClick(note: Note) {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Xác nhận xóa")
-        builder.setMessage("Bạn có chắc chắn muốn xóa không ?")
+        builder.setMessage(getString(R.string.b_n_c_ch_c_ch_n_mu_n_x_a_kh_ng))
         builder.setPositiveButton("Có") { dialog, _ ->
             coroutineScope.launch {
                 noteDao.deleteNote(note.id)

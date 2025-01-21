@@ -15,8 +15,32 @@ class NoteAdapter(
     private var context: Context)
     : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
 
-    class NoteViewHolder(val binding: ItemNoteBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class NoteViewHolder(val binding: ItemNoteBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(note: Note) {
+            with(binding){
+                tvTitle.text = note.title
+                tvContent.text = note.content
+                if (note.editTime != null) {
+                    tvDate.text = formatDate(Date(note.editTime))
+                }else{
+                    tvDate.text = formatDate(Date(note.createTime))
+                }
+            }
+            itemView.setOnClickListener(){
+                listener.onNoteClick(note)
+            }
+            itemView.setOnLongClickListener(){
+                listener.onDeleteClick(note)
+                true
+            }
+            itemView.context
+        }
 
+        @SuppressLint("SimpleDateFormat")
+        fun formatDate(date: Date): String {
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd")
+            return dateFormat.format(date)
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
@@ -31,22 +55,8 @@ class NoteAdapter(
 
     override fun onBindViewHolder(holder: NoteViewHolder, position: Int) {
         val note = notes[position]
-        with(holder.binding){
-            tvTitle.text = note.title
-            tvContent.text = note.content
-            if (note.editTime != null) {
-                tvDate.text = formatDate(Date(note.editTime))
-            }else{
-                tvDate.text = formatDate(Date(note.createTime))
-            }
-        }
-        holder.itemView.setOnClickListener(){
-            listener.onNoteClick(note)
-        }
-        holder.itemView.setOnLongClickListener(){
-            listener.onDeleteClick(note)
-            true
-        }
+        holder.bind(note)
+
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -66,9 +76,5 @@ class NoteAdapter(
         notifyItemInserted(0)
     }
 
-    @SuppressLint("SimpleDateFormat")
-    fun formatDate(date: Date): String {
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd")
-        return dateFormat.format(date)
-    }
+
 }
