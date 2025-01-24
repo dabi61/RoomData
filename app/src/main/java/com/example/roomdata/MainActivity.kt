@@ -18,29 +18,28 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.room.Room
-import com.example.roomdata.database.FilterType
+import com.example.roomdata.Constant.EXTRA_TYPE
+import com.example.roomdata.Constant.PREF_NAME
+import com.example.roomdata.Constant.TYPE_ADD
 import com.example.roomdata.database.NoteDao
 import com.example.roomdata.database.NoteDatabase
 import com.example.roomdata.databinding.ActivityMainBinding
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.Date
 
 class MainActivity : AppCompatActivity(), OnNoteClickListener {
     private lateinit var binding: ActivityMainBinding
     private lateinit var noteAdapter: NoteAdapter
     private lateinit var noteList: MutableList<Note>
-    private val coroutineScope = CoroutineScope(Dispatchers.IO)
     private lateinit var noteDao: NoteDao
-    private val date = Date()
+
     private val detailForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             Toast.makeText(this, "Sửa note thành công!", Toast.LENGTH_SHORT).show()
-            coroutineScope.launch {
+            lifecycleScope.launch(Dispatchers.IO) {
                 val notes = noteDao.getListNote(binding.etSearch.text.toString(), binding.etSearch.text.toString())
                 withContext(Dispatchers.Main){
                     noteAdapter.updateData(notes)
@@ -61,10 +60,7 @@ class MainActivity : AppCompatActivity(), OnNoteClickListener {
         window.statusBarColor = ContextCompat.getColor(this, R.color.float_button)
 
         noteList = mutableListOf()
-        val db = Room.databaseBuilder(
-            applicationContext,
-            NoteDatabase::class.java, "note_db"
-        ).build()
+        val db = NoteDatabase.getInstance(this)
         noteDao = db.getNodeDao()
 
 
@@ -78,7 +74,7 @@ class MainActivity : AppCompatActivity(), OnNoteClickListener {
         val createForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 Toast.makeText(this, "Thêm note thành công!", Toast.LENGTH_SHORT).show()
-                coroutineScope.launch {
+                lifecycleScope.launch(Dispatchers.IO) {
                     val id = noteDao.getLastId()
                     val note = noteDao.getNoteById(id)
                     withContext(Dispatchers.Main)
@@ -91,7 +87,7 @@ class MainActivity : AppCompatActivity(), OnNoteClickListener {
         }
         binding.fbtAdd.setOnClickListener{
             val intent = Intent(this, AddNoteActivity::class.java)
-            intent.putExtra("type", "add")
+            intent.putExtra(EXTRA_TYPE, "add")
             createForResult.launch(intent)
         }
         binding.ivSearch.setOnClickListener(){
@@ -105,7 +101,7 @@ class MainActivity : AppCompatActivity(), OnNoteClickListener {
                 // Không cần làm gì ở đây
             }
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                coroutineScope.launch {
+                lifecycleScope.launch(Dispatchers.IO) {
                     var notes = noteDao.getListNote(s.toString(), s.toString())
                     withContext(Dispatchers.Main) {
                         noteAdapter.updateData(notes)
@@ -121,7 +117,7 @@ class MainActivity : AppCompatActivity(), OnNoteClickListener {
         }
     }
     private fun showData() {
-        val sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences(PREF_NAME, MODE_PRIVATE)
         val id = sharedPreferences.getString("filter", R.id.r1.toString())
         if (id != null) {
             showFilter(id.toInt())
@@ -132,7 +128,7 @@ class MainActivity : AppCompatActivity(), OnNoteClickListener {
     }
     private fun showFilterDialog() {
         // Sửa filter ko theo id, enum
-        val sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences(PREF_NAME, MODE_PRIVATE)
         val editor = sharedPreferences.edit()
         val dialogFilter = LayoutInflater.from(this).inflate(R.layout.dialog_filter, null)
         val rgFilter = dialogFilter.findViewById<RadioGroup>(R.id.rg_sort)
@@ -166,7 +162,7 @@ class MainActivity : AppCompatActivity(), OnNoteClickListener {
     }
 
     private fun showFilter(selectedId: Int) {
-        coroutineScope.launch {
+        lifecycleScope.launch(Dispatchers.IO) {
             val notes = noteDao.getAllNote()
             withContext(Dispatchers.Main)
             {
@@ -232,7 +228,7 @@ class MainActivity : AppCompatActivity(), OnNoteClickListener {
         }
     }
     private fun getAllNote(noteDao: NoteDao) {
-        coroutineScope.launch {
+        lifecycleScope.launch(Dispatchers.IO) {
             val notes: MutableList<Note> = noteDao.getAllNote()
             Log.d("Database", "Notes: $notes")
             withContext(Dispatchers.Main) {
@@ -253,7 +249,7 @@ class MainActivity : AppCompatActivity(), OnNoteClickListener {
         builder.setTitle("Xác nhận xóa")
         builder.setMessage(getString(R.string.b_n_c_ch_c_ch_n_mu_n_x_a_kh_ng))
         builder.setPositiveButton("Có") { dialog, _ ->
-            coroutineScope.launch {
+            lifecycleScope.launch(Dispatchers.IO) {
                 noteDao.deleteNote(note.id)
                 val notes = noteDao.getAllNote()
                 withContext(Dispatchers.Main) {

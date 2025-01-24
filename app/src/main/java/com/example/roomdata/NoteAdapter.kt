@@ -33,7 +33,6 @@ class NoteAdapter(
                 listener.onDeleteClick(note)
                 true
             }
-            itemView.context
         }
 
         @SuppressLint("SimpleDateFormat")

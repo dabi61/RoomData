@@ -9,6 +9,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
 import com.example.roomdata.database.NoteDao
 import com.example.roomdata.database.NoteDatabase
@@ -22,7 +24,6 @@ import java.util.Date
 
 class AddNoteActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAddNoteBinding
-    private val coroutineScope = CoroutineScope(Dispatchers.IO)
     private lateinit var noteDao: NoteDao
     private val date = Date()
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,12 +43,8 @@ class AddNoteActivity : AppCompatActivity() {
         val type = intent.getStringExtra("type")
         binding.ivBack.setOnClickListener() {
             onBackPressedDispatcher.onBackPressed()
-            finish()
         }
-        val db = Room.databaseBuilder(
-            applicationContext,
-            NoteDatabase::class.java, "note_db"
-        ).build()
+        val db = NoteDatabase.getInstance(this)
         noteDao = db.getNodeDao()
         binding.ivDone.setOnClickListener() {
             if (type != null) {
@@ -56,7 +53,7 @@ class AddNoteActivity : AppCompatActivity() {
         }
         binding.tvDate.text = formatDate(date)
         if (type == "edit") {
-            coroutineScope.launch {
+            lifecycleScope.launch(Dispatchers.IO) {
                 val id = intent.getIntExtra("id", 0)
                 val note = noteDao.getNoteById(id)
                 withContext(Dispatchers.Main) {
@@ -72,7 +69,7 @@ class AddNoteActivity : AppCompatActivity() {
         if (type == "add") {
             val title: String = binding.etTitle.text.toString()
             val content: String = binding.etContent.text.toString()
-            coroutineScope.launch {
+            lifecycleScope.launch(Dispatchers.IO) {
                 val note = Note(
                     title = title,
                     content = content,
@@ -86,7 +83,7 @@ class AddNoteActivity : AppCompatActivity() {
             finish()
         } else if (type == "edit") {
             val id = intent.getIntExtra("id", 0)
-            coroutineScope.launch {
+            lifecycleScope.launch(Dispatchers.IO) {
                 noteDao.updateNote(
                     id,
                     binding.etTitle.text.toString(),
